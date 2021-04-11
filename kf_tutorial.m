@@ -1,5 +1,11 @@
 %% kalman filtering tutorial
-% Harrison Ritz Apr 2021
+% Harrison Ritz April 2021
+%
+% based on kalmanfilter.m from http://www.diedrichsenlab.org/toolboxes/toolbox_kinematics.htm
+%
+% resources:
+% https://youtube.com/playlist?list=PLX2gX-ftPVXU3oUFNATxGXY90AULiqnWT
+% www.kalmanfilter.net
 
 clear; clc;
 
