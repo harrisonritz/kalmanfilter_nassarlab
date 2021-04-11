@@ -5,12 +5,26 @@ clear; clc;
 
 %% UNIVARIATE =============================================================
 
+%% univariate filtering
+%
+% P: estimate uncertainty
+% R: measurement uncertainty
+% $K_{t} = P_{t} / (P_{t} + R)$
+%
+%
+% estimate updates
+% prediction: $x_{t} = x_{t} + K(y_{t} - x_{t-1})$
+% uncertainty: $P_{t} = P_{t-1} - K_{t}P_{t-1}$
+%
+% time updates
+% prediction: $x_{t+1} + Ax{t} + [Bu]$
+% uncertainty: $P_{t+1} + AP_{t}A' + Q$
 
 %% ========== generate random walk ==========
 
 % === setup
 nTime       = 100;
-a_gen       = 1;
+a_gen       = .95;
 sd_gen      = 1;
 y = 0;
 
@@ -31,23 +45,6 @@ set(gca, 'LineWidth', 1, 'TickDir', 'out');
 title(sprintf('1d random walk (a=%g, sd=%g)', a_gen, sd_gen))
 xlabel('timesteps')
 ylabel('y')
-
-
-%% univariate filtering
-%
-% P: estimate uncertainty
-% R: measurement uncertainty
-% $K_{t} = P_{t} / (P_{t} + R)$
-%
-%
-% estimate updates
-% prediction: $x_{t} = x_{t} + K(y_{t} - x_{t-1})$
-% uncertainty: $P_{t} = P_{t-1} - K_{t}P_{t-1}$
-%
-% time updates
-% prediction: $x_{t+1} + Ax{t} + [Bu]$
-% uncertainty: $P_{t+1} + AP_{t}A' + Q$
-
 
 
 %% ========== kalman filter ========== 
@@ -102,18 +99,18 @@ ylabel('y')
 
 % plot diagnostics
 figure; hold on;
+tiledlayout(1,2)
 
-
-% plot PE distribution
-nexttile; hold on;
-[f,x]=ksdensity(y-yp);
-plot(x, f, '-k', 'LineWidth',2);
-
-xlim([-5, 5])
-
-title(sprintf('PE distribution'))
-xlabel('PE')
-ylabel('density')
+% % plot PE distribution
+% nexttile; hold on;
+% [f,x]=ksdensity(y-yp);
+% plot(x, f, '-k', 'LineWidth',2);
+% 
+% xlim([-5, 5])
+% 
+% title(sprintf('PE distribution'))
+% xlabel('PE')
+% ylabel('density')
 
 
 % plot gain timeseries
@@ -127,7 +124,7 @@ ylabel('gain')
 
 % plot uncertainty timeseries
 nexttile; hold on;
-plot(P, '-b', 'LineWidth',2);
+plot(P, '--k', 'LineWidth',2);
 
 title(sprintf('uncertainty timeseries'))
 xlabel('timesteps')
@@ -137,6 +134,21 @@ ylabel('uncertainty')
 
 %% MULTIVARIATE ===========================================================
 
+%% multivariate filtering
+%
+% P: estimate uncertainty
+% R: measurement uncertainty
+% C: observation matrix
+% $K_{t} = P_{t}C'(CP_{t}C' + R)^{-1}$
+%
+%
+% estimate updates
+% prediction: $x_{t} = x_{t} + K(y_{t} - Cx_{t-1})$
+% uncertainty: $P_{t} = P_{t-1} - K_{t} CP_{t-1}$
+%
+% time updates
+% prediction: $x_{t+1} + Ax{t} + [Bu]$
+% uncertainty: $P_{t+1} + AP_{t}A' + Q$
 
 %% ========== generate random walk ==========
 
@@ -173,33 +185,13 @@ xlabel('timesteps')
 ylabel('position')
 
 nexttile; hold on;
-plot(y(2,:), '--k', 'LineWidth', 2);
+plot(y(2,:), '-g', 'LineWidth', 2);
 title(sprintf('velocity (latent)'));
 xlabel('timesteps')
 ylabel('velocity')
 
 
 set(gca, 'LineWidth', 1, 'TickDir', 'out');
-
-
-
-
-%% multivariate filtering
-%
-% P: estimate uncertainty
-% R: measurement uncertainty
-% C: observation matrix
-% $K_{t} = P_{t}C'(CP_{t}C' + R)^{-1}$
-%
-%
-% estimate updates
-% prediction: $x_{t} = x_{t} + K(y_{t} - Cx_{t-1})$
-% uncertainty: $P_{t} = P_{t-1} - K_{t} CP_{t-1}$
-%
-% time updates
-% prediction: $x_{t+1} + Ax{t} + [Bu]$
-% uncertainty: $P_{t+1} + AP_{t}A' + Q$
-
 
 
 
@@ -213,8 +205,8 @@ Q =  [...
     0, 0];
 
 R =  [...
-     1, 0;...
-     0, 1];
+     .1, 0;...
+      0, 1];
 
 C =  [...
     1, 0;...
@@ -222,7 +214,7 @@ C =  [...
 
 xm = [...
     0;
-    10];
+   10];
 
 Pm = [...
     5, 0;...
@@ -251,6 +243,7 @@ end
 
 % === plot
 figure; hold on;
+tiledlayout(2,1)
 
 
 % plot timeseries
@@ -291,23 +284,28 @@ ylabel('y')
 
 % plot diagnostics
 figure; hold on;
+tiledlayout(1,2)
 
 
 % plot gain timeseries
 nexttile; hold on;
 plot(squeeze(K(1,1,:)), '-k', 'LineWidth',2);
 plot(squeeze(K(2,2,:)), '-g', 'LineWidth',2);
+
 title(sprintf('gain timeseries'))
 xlabel('timesteps')
 ylabel('gain')
-
+legend({'position', 'velocity'})
 
 % plot uncertainty timeseries
 nexttile; hold on;
 plot(squeeze(P(1,1,:)), '--k', 'LineWidth',2);
 plot(squeeze(P(2,2,:)), '--g', 'LineWidth',2);
+plot(squeeze(P(1,2,:)), '--b', 'LineWidth',2);
+
 title(sprintf('uncertainty timeseries'))
 xlabel('timesteps')
 ylabel('uncertainty')
+legend({'position', 'velocity', 'cross'})
 
 
