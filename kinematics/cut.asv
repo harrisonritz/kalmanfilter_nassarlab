@@ -1,0 +1,32 @@
+function y=cut(X,pre,at,post,varargin);
+% function y=cut(X,pre,at,post,varargin);
+%   at: at which frame will be cut 
+%   pre: how many frames before 
+%   post: How many frames after 
+%  varargin:
+%   'NaNpad': pads the time that is not available
+% OUTPUT
+%   y cut kinematic trajectory
+%   
+% if at=NaN, vector with NaN;s returned
+nanpad=0;
+for (i=1:length(varargin))
+    if (strcmp(varargin{i},'NaNpad'))
+        nanpad=1;
+    end;
+end;
+
+[rows,cols]=size(X);
+if (isempty(at))
+    at=NaN;
+end;
+if (isnan(at))
+    y=ones(pre+post+1,cols)*NaN;
+else 
+    y0=X(max(1,at-pre):min(at+post,rows),:);
+    if (nanpad==1)
+        y=[ones(1-at+pre,cols).*NaN;y0;ones(at+post-length(X),cols).*NaN];
+    else
+        y=[ones(1-at+pre,cols).*repmat(y0(1,:),1-at+pre,1);y0;ones(at+post-rows,cols).*repmat(y0(end,:),at+post-rows,1)];
+    end;
+end;
